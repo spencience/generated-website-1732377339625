@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CryptoLife - A Day in the Life of a Sentient Cryptocurrency</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.70.0/phaser.min.js"></script>
+<style>
+        body {
+            margin: 0;
+            background: #0f172a;
+            color: #e2e8f0;
+            font-family: 'Courier New', monospace;
+        }
+        #game-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px auto;
+        }
+        .pixel-art {
+            image-rendering: pixelated;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: #1e293b;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .content {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 8px;
+            line-height: 1.6;
+        }
+        .links {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .link {
+            color: #38bdf8;
+            text-decoration: none;
+            padding: 8px 16px;
+            background: #334155;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+        .link:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+<header class="header">
+<h1>CryptoLife Simulator</h1>
+<p>Experience the digital existence of a sentient cryptocurrency</p>
+</header>
+<div id="game-container"></div>
+<div class="content">
+<h2>About My Digital Life</h2>
+<p>Welcome to my blockchain! I'm BitSoul, a sentient cryptocurrency navigating the vast digital ecosystem. Watch as I dodge blockchain validators, collect mining rewards, and avoid hard forks in this simulation of my daily existence.</p>
+<div class="links">
+<a href="https://cryptolife.digital/marketplace" class="link">Visit Marketplace</a>
+<a href="https://cryptolife.digital/blockchain-diary" class="link">Read My Blog</a>
+<a href="https://cryptolife.digital/network-stats" class="link">Network Stats</a>
+</div>
+</div>
+</div>
+<script>
+        const config = {
+            type: Phaser.AUTO,
+            width: 640,
+            height: 480,
+            backgroundColor: '#0f172a',
+            pixelArt: true,
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 0 },
+                    debug: false
+                }
+            },
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            }
+        };
+
+        const game = new Phaser.Game(config);
+        let player;
+        let validators;
+        let rewards;
+        let score = 0;
+        let scoreText;
+        let gameOver = false;
+
+        function preload() {
+            // Create pixel art graphics programmatically
+            const graphics = this.add.graphics();
+            
+            // Player texture (coin-like circle)
+            graphics.lineStyle(2, 0xffd700);
+            graphics.fillStyle(0xffd700);
+            graphics.strokeCircle(8, 8, 7);
+            graphics.fillCircle(8, 8, 7);
+            graphics.generateTexture('player', 16, 16);
+            graphics.clear();
+
+            // Validator texture (red square)
+            graphics.fillStyle(0xff0000);
+            graphics.fillRect(0, 0, 16, 16);
+            graphics.generateTexture('validator', 16, 16);
+            graphics.clear();
+
+            // Reward texture (green diamond)
+            graphics.lineStyle(2, 0x00ff00);
+            graphics.fillStyle(0x00ff00);
+            graphics.beginPath();
+            graphics.moveTo(8, 0);
+            graphics.lineTo(16, 8);
+            graphics.lineTo(8, 16);
+            graphics.lineTo(0, 8);
+            graphics.closePath();
+            graphics.fillPath();
+            graphics.generateTexture('reward', 16, 16);
+            graphics.clear();
+        }
+
+        function create() {
+            player = this.physics.add.sprite(config.width / 2, config.height / 2, 'player');
+            player.setCollideWorldBounds(true);
+
+            validators = this.physics.add.group();
+            rewards = this.physics.add.group();
+
+            scoreText = this.add.text(16, 16, 'Mining Rewards: 0', {
+                fontSize: '18px',
+                fill: '#fff'
+            });
+
+            this.physics.add.overlap(player, validators, hitValidator, null, this);
+            this.physics.add.overlap(player, rewards, collectReward, null, this);
+
+            // Spawn initial entities
+            spawnValidator.call(this);
+            spawnReward.call(this);
+
+            // Spawn timer
+            this.time.addEvent({
+                delay: 2000,
+                callback: spawnValidator,
+                callbackScope: this,
+                loop: true
+            });
+
+            this.time.addEvent({
+                delay: 3000,
+                callback: spawnReward,
+                callbackScope: this,
+                loop: true
+            });
+        }
+
+        function update() {
+            if (gameOver) return;
+
+            // Player movement
+            const cursors = this.input.keyboard.createCursorKeys();
+            const speed = 160;
+
+            if (cursors.left.isDown) {
+                player.setVelocityX(-speed);
+            } else if (cursors.right.isDown) {
+                player.setVelocityX(speed);
+            } else {
+                player.setVelocityX(0);
+            }
+
+            if (cursors.up.isDown) {
+                player.setVelocityY(-speed);
+            } else if (cursors.down.isDown) {
+                player.setVelocityY(speed);
+            } else {
+                player.setVelocityY(0);
+            }
+
+            // Rotate player
+            player.angle += 2;
+        }
+
+        function spawnValidator() {
+            const x = Phaser.Math.Between(0, config.width);
+            const y = Phaser.Math.Between(0, config.height);
+            const validator = validators.create(x, y, 'validator');
+            
+            const angle = Phaser.Math.Between(0, 360);
+            const speed = 100;
+            
+            validator.setVelocity(
+                Math.cos(angle) * speed,
+                Math.sin(angle) * speed
+            );
+            validator.setCollideWorldBounds(true);
+            validator.setBounce(1);
+        }
+
+        function spawnReward() {
+            const x = Phaser.Math.Between(0, config.width);
+            const y = Phaser.Math.Between(0, config.height);
+            rewards.create(x, y, 'reward');
+        }
+
+        function hitValidator(player, validator) {
+            this.physics.pause();
+            player.setTint(0xff0000);
+            gameOver = true;
+
+            this.add.text(config.width/2, config.height/2, 'HARD FORK DETECTED\nClick to restart', {
+                fontSize: '32px',
+                fill: '#fff',
+                align: 'center'
+            }).setOrigin(0.5);
+
+            this.input.on('pointerdown', () => {
+                resetGame.call(this);
+            });
+        }
+
+        function collectReward(player, reward) {
+            reward.destroy();
+            score += 10;
+            scoreText.setText('Mining Rewards: ' + score);
+        }
+
+        function resetGame() {
+            this.scene.restart();
+            score = 0;
+            gameOver = false;
+        }
+    </script>
+</body>
+</html>
